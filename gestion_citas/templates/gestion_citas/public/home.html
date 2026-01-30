@@ -1,17 +1,19 @@
 {% extends 'gestion_citas/base.html' %}
 
-{% block title %}Inicio - Barbería{% endblock %}
+{% block title %}Inicio - Barbería DAW{% endblock %}
 
 {% block content %}
 
-<header class="text-white text-center position-relative" style="background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1503951914875-befbb7135952?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'); background-size: cover; background-position: center; padding: 150px 0;">
+<header class="text-white text-center position-relative" style="background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1503951914875-befbb7135952?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'); background-size: cover; background-position: center; padding: 180px 0;">
     <div class="container position-relative z-index-1">
-        <h1 class="display-3 fw-bold text-uppercase mb-3">La Excelencia en Cada Corte</h1>
-        <p class="lead mb-4 fs-4">Más que una barbería, una tradición de caballeros.</p>
+        <h5 class="text-warning text-uppercase ls-2 fw-bold mb-3">Estilo & Elegancia</h5>
+        <h1 class="display-3 fw-bold text-uppercase mb-4">La Excelencia en Cada Corte</h1>
+        <p class="lead mb-5 fs-5 w-75 mx-auto">Más que una barbería, una tradición de caballeros. Reserva tu cita online y evita esperas.</p>
+        
         {% if not user.is_authenticated %}
-            <a href="#" class="btn btn-gold btn-lg px-5 py-3 fw-bold rounded-0">RESERVAR CITA</a>
+            <a href="{% url 'registro' %}" class="btn btn-gold btn-lg px-5 py-3 fw-bold rounded-0">RESERVAR CITA</a>
         {% else %}
-            <a href="#" class="btn btn-gold btn-lg px-5 py-3 fw-bold rounded-0">MI ÁREA PERSONAL</a>
+            <a href="{% url 'reservar_cita' %}" class="btn btn-gold btn-lg px-5 py-3 fw-bold rounded-0">PEDIR CITA AHORA</a>
         {% endif %}
     </div>
 </header>
@@ -26,19 +28,19 @@
                 <h5 class="text-warning text-uppercase fw-bold ls-2">Nuestra Historia</h5>
                 <h2 class="display-5 fw-bold mb-4 text-dark">El Arte del Cuidado Masculino</h2>
                 <p class="text-muted lead">Desde 2015, nos hemos dedicado a revivir la experiencia clásica de la barbería tradicional combinándola con las técnicas más modernas.</p>
-                <p class="text-muted">En nuestro espacio, el tiempo se detiene. No solo vienes a cortarte el pelo, vienes a relajarte, a disfrutar de una buena conversación y a salir sintiéndote tu mejor versión. Utilizamos exclusivamente productos de primera calidad para garantizar resultados impecables.</p>
+                <p class="text-muted">En nuestro espacio, el tiempo se detiene. No solo vienes a cortarte el pelo, vienes a relajarte. Utilizamos exclusivamente productos de primera calidad para garantizar resultados impecables.</p>
                 
                 <div class="row mt-4">
                     <div class="col-6 mb-3">
                         <div class="d-flex align-items-center">
                             <i class="bi bi-award fs-2 text-warning me-3"></i>
-                            <span class="fw-bold text-dark">Profesionales Certificados</span>
+                            <span class="fw-bold text-dark">Profesionales</span>
                         </div>
                     </div>
                     <div class="col-6 mb-3">
                         <div class="d-flex align-items-center">
                             <i class="bi bi-shop fs-2 text-warning me-3"></i>
-                            <span class="fw-bold text-dark">Ambiente Premium</span>
+                            <span class="fw-bold text-dark">Ambiente Top</span>
                         </div>
                     </div>
                 </div>
@@ -58,7 +60,7 @@
         <div class="row g-4">
             {% for servicio in servicios %}
             <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm hover-card">
+                <div class="card h-100 border-0 shadow-sm">
                     <div class="card-body text-center p-4">
                         <div class="mb-3 text-warning">
                             <i class="bi bi-scissors fs-1"></i>
@@ -72,7 +74,7 @@
                 </div>
             </div>
             {% empty %}
-                <p class="text-center text-muted">No hay servicios configurados aún.</p>
+                <p class="text-center text-muted col-12">No hay servicios configurados aún en el panel de administración.</p>
             {% endfor %}
         </div>
     </div>
@@ -83,17 +85,20 @@
         <div class="text-center mb-5">
             <h5 class="text-warning text-uppercase fw-bold">Expertos</h5>
             <h2 class="fw-bold">Conoce a los Maestros</h2>
+            <p class="text-secondary">Selecciona tu barbero favorito al pedir cita.</p>
         </div>
         
-        <div class="row text-center">
+        <div class="row text-center justify-content-center">
             {% for barbero in barberos %}
             <div class="col-md-4 mb-4">
-                <div class="bg-secondary p-3 rounded h-100 position-relative overflow-hidden group-hover">
+                <div class="bg-secondary p-3 rounded h-100 position-relative overflow-hidden">
+                    
                     {% if barbero.foto %}
                         <img src="{{ barbero.foto.url }}" class="img-fluid rounded mb-3" style="height: 300px; object-fit: cover; width: 100%;" alt="{{ barbero.nombre }}">
                     {% else %}
-                        <img src="https://images.unsplash.com/photo-1634316427447-0630b9829375?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" class="img-fluid rounded mb-3" style="height: 300px; object-fit: cover; width: 100%;">
+                        <img src="https://images.unsplash.com/photo-1634316427447-0630b9829375?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" class="img-fluid rounded mb-3" style="height: 300px; object-fit: cover; width: 100%;" alt="Imagen por defecto">
                     {% endif %}
+
                     <h4 class="fw-bold">{{ barbero.nombre }} {{ barbero.apellido }}</h4>
                     <p class="text-warning mb-0">{{ barbero.experiencia }} años de experiencia</p>
                     <small class="text-light opacity-75">
@@ -105,7 +110,7 @@
             </div>
             {% empty %}
             <div class="col-12">
-                <p class="text-center">Estamos seleccionando a los mejores profesionales.</p>
+                <p class="text-center text-muted">Aún no se han añadido barberos.</p>
             </div>
             {% endfor %}
         </div>
@@ -119,7 +124,7 @@
                 <h3 class="fw-bold mb-4"><i class="bi bi-geo-alt text-warning"></i> Visítanos</h3>
                 <p class="lead">Calle Gran Vía, 23<br>28013, Madrid</p>
                 <p class="mb-0"><strong>Teléfono:</strong> +34 912 345 678</p>
-                <p><strong>Email:</strong> info@barberiaproyecto.com</p>
+                <p><strong>Email:</strong> citas@barberiaproyecto.com</p>
             </div>
             <div class="col-md-6">
                 <h3 class="fw-bold mb-4"><i class="bi bi-clock text-warning"></i> Horario de Apertura</h3>
