@@ -1,0 +1,50 @@
+{% extends 'gestion_citas/base.html' %}
+
+{% block title %}Registro - Barbería{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-dark text-white text-center py-4">
+                    <h3 class="fw-bold mb-0 text-warning">Crear Cuenta</h3>
+                    <p class="mb-0 text-white-50">Únete para reservar tus citas fácilmente</p>
+                </div>
+                <div class="card-body p-5">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% for field in form %}
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">{{ field.label }}</label>
+                                <div class="text-muted small mb-1">{{ field.help_text }}</div>
+                                {{ field }} </div>
+                            {% if field.errors %}
+                                <div class="alert alert-danger py-1">{{ field.errors }}</div>
+                            {% endif %}
+                        {% endfor %}
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-gold btn-lg text-white">Registrarse</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center py-3">
+                    <div class="small">¿Ya tienes cuenta? <a href="{% url 'login' %}" class="text-dark fw-bold">Inicia Sesión</a></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    input[type="text"], input[type="password"], input[type="email"] {
+        width: 100%;
+        padding: 0.375rem 0.75rem;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+    }
+    ul.errorlist { color: red; list-style: none; padding: 0; }
+</style>
+{% endblock %}
