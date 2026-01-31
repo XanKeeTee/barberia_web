@@ -29,6 +29,9 @@
                         <p class="mb-3"><i class="bi bi-cash"></i> Precio: {{ cita.servicio.precio }}€</p>
                         
                         <div class="d-flex justify-content-end mt-3">
+                            <a href="{% url 'editar_cita' cita.id %}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-pencil"></i> Editar
+                            </a>
                             <form action="{% url 'cancelar_cita' cita.id %}" method="post" onsubmit="return confirm('¿Seguro que quieres cancelar esta cita?');">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-outline-danger btn-sm">

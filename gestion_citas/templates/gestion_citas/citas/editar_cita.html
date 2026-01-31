@@ -1,0 +1,48 @@
+{% extends 'gestion_citas/base.html' %}
+
+{% block title %}Modificar Cita{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-warning text-dark text-center py-3">
+                    <h3 class="mb-0 fw-bold"><i class="bi bi-pencil-square"></i> Modificar Reserva</h3>
+                </div>
+                <div class="card-body p-4">
+                    
+                    <div class="alert alert-light border mb-4 text-center">
+                        Editando cita del día <strong>{{ cita.fecha|date:"d M Y" }}</strong>
+                    </div>
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle-fill"></i> {{ form.non_field_errors.0 }}
+                        </div>
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% for field in form %}
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.errors %}
+                                    <div class="text-danger small">{{ field.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-dark btn-lg">Guardar Cambios</button>
+                            <a href="{% url 'mis_citas' %}" class="btn btn-outline-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

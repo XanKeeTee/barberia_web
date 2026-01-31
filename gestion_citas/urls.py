@@ -15,6 +15,9 @@ urlpatterns = [
 
     path('mis-citas/', views.mis_citas, name='mis_citas'),
     path('reservar/', views.reservar_cita, name='reservar_cita'),
+    path('editar/<int:cita_id>/', views.editar_cita, name='editar_cita'),
     path('cancelar/<int:cita_id>/', views.cancelar_cita, name='cancelar_cita'),
     path('agenda-staff/', views.agenda_profesional, name='agenda_profesional'),
 ]
+
+handler404 = 'gestion_citas.views.error_404'
