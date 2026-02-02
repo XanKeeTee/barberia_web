@@ -1,43 +1,430 @@
 {% extends 'gestion_citas/base.html' %}
+{% load static %}
 
-{% block title %}Reservar Cita - Barbería{% endblock %}
+{% block title %}Reservar Cita{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
+
 <div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-            <div class="card shadow-lg border-0">
-                <div class="card-header bg-dark text-white text-center py-3">
-                    <h3 class="mb-0 text-warning">Reservar Nuevo Corte</h3>
+    <div class="mb-4">
+        <h2 class="fw-bold">Reserva tu cita</h2>
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">{{ form.non_field_errors.0 }}</div>
+        {% endif %}
+    </div>
+
+    <form method="post" id="bookingForm">
+        {% csrf_token %}
+        
+        <div class="d-none">
+            {{ form.fecha }}
+            {{ form.hora }}
+            {{ form.barbero }}
+            {{ form.servicio }}
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body">
+                        <h5 class="fw-bold mb-3"><span class="badge bg-dark rounded-circle me-2">1</span>Servicio</h5>
+                        <select id="visual_servicio" class="form-select form-select-lg" onchange="actualizarResumen()">
+                            {% for s in servicios %}
+                                <option value="{{ s.id }}" data-precio="{{ s.precio }}" data-nombre="{{ s.nombre }}">{{ s.nombre }} - {{ s.precio }}€</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                 </div>
-                <div class="card-body p-4">
-                    
-                    {% if form.non_field_errors %}
-                        <div class="alert alert-danger">
-                            <i class="bi bi-exclamation-triangle-fill"></i> {{ form.non_field_errors.0 }}
-                        </div>
-                    {% endif %}
 
-                    <form method="post">
-                        {% csrf_token %}
-                        
-                        {% for field in form %}
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">{{ field.label }}</label>
-                                {{ field }} {% if field.errors %}
-                                    <div class="text-danger small">{{ field.errors.0 }}</div>
-                                {% endif %}
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body">
+                        <h5 class="fw-bold mb-3"><span class="badge bg-dark rounded-circle me-2">2</span>Profesional</h5>
+                        <div class="d-flex gap-4 flex-wrap">
+                            {% for b in barberos %}
+                            <div class="text-center cursor-pointer barber-option" id="barber-{{ b.id }}" onclick="selectBarber('{{ b.id }}', '{{ b.nombre }}', this)">
+                                <div class="avatar-wrapper mb-2">
+                                    {% if b.foto %}
+                                        <img src="{{ b.foto.url }}" class="avatar-circle">
+                                    {% else %}
+                                        <div class="avatar-circle bg-dark text-white d-flex align-items-center justify-content-center fw-bold fs-4">
+                                            {{ b.nombre|slice:":1" }}
+                                        </div>
+                                    {% endif %}
+                                    <span class="status-dot"></span>
+                                </div>
+                                <div class="small fw-bold">{{ b.nombre }}</div>
                             </div>
-                        {% endfor %}
-
-                        <div class="d-grid gap-2 mt-4">
-                            <button type="submit" class="btn btn-gold btn-lg">Confirmar Reserva</button>
-                            <a href="{% url 'mis_citas' %}" class="btn btn-outline-secondary">Volver</a>
+                            {% endfor %}
                         </div>
-                    </form>
+                        <div id="aviso-seleccion" class="alert alert-warning mt-3 small p-2">
+                            <i class="bi bi-arrow-up-circle"></i> Selecciona primero un barbero para ver su disponibilidad.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 mb-4 opacity-50" id="bloque-calendario" style="pointer-events: none; transition: opacity 0.3s;">
+                    <div class="card-body">
+                        <h5 class="fw-bold mb-3"><span class="badge bg-dark rounded-circle me-2">3</span>Fecha y Hora</h5>
+                        
+                        <div class="d-flex justify-content-center mb-4 bg-light rounded p-3">
+                            <div id="calendar-inline"></div>
+                        </div>
+
+                        <h5 class="fw-bold mb-3">Horas Disponibles</h5>
+                        
+                        <div style="position: relative;">
+                            
+                            <div id="aviso-falta-dia" class="mensaje-flotante">
+                                <i class="bi bi-calendar-event"></i> Primero elige un día
+                            </div>
+
+                            <div id="contenedor-horas" class="seccion-desactivada">
+                                
+                                <div class="d-flex gap-3 mb-3 small text-muted flex-wrap">
+                                    <div><span class="badge border text-dark" style="background: white;">10:00</span> Libre</div>
+                                    <div><span class="badge bg-danger">Ocupada</span></div>
+                                    <div><span class="badge bg-secondary">Pasada</span></div>
+                                    <div><span class="badge bg-dark text-white">Tuya</span></div>
+                                </div>
+
+                                <div class="row g-2" id="time-slots">
+                                    {% for hora in horarios %}
+                                    <div class="col-3 col-md-2">
+                                        <button type="button" 
+                                                class="btn btn-outline-dark w-100 time-btn p-1" 
+                                                data-time="{{ hora }}" 
+                                                disabled
+                                                onclick="selectTime('{{ hora }}', this)">
+                                            {{ hora }}
+                                        </button>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <div id="msg-sin-horas" class="alert alert-danger mt-3 d-none">
+                                    <i class="bi bi-emoji-frown"></i> Día completo o jornada finalizada.
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card shadow border-0 sticky-top" style="top: 20px;">
+                    <div class="card-header bg-dark text-white text-center py-3">
+                        <h5 class="mb-0 fw-bold">RESUMEN</h5>
+                    </div>
+                    <div class="card-body">
+                        
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted" id="resumen_servicio">Servicio...</span>
+                            <span class="fw-bold" id="resumen_precio">0.00 €</span>
+                        </div>
+                        <hr class="my-2">
+                        
+                        <div class="mb-3">
+                            <label class="small text-muted fw-bold">BARBERO</label>
+                            <div class="fw-bold fs-5 text-dark" id="resumen_barbero">---</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="small text-muted fw-bold">FECHA Y HORA</label>
+                            <div class="alert alert-light border text-center p-2 mb-0">
+                                <i class="bi bi-calendar-event"></i> 
+                                <span id="resumen_fecha" class="fw-bold">---</span> 
+                                <br>
+                                <i class="bi bi-clock"></i> 
+                                <span id="resumen_hora" class="fw-bold display-6">--:--</span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mt-4 p-3 bg-light rounded">
+                            <span class="fw-bold text-secondary">TOTAL</span>
+                            <span class="fs-3 fw-bold text-dark" id="resumen_total">0.00 €</span>
+                        </div>
+
+                        <button type="submit" id="btn-submit" class="btn btn-gold w-100 py-3 fw-bold mt-3 shadow-sm" disabled>
+                            CONFIRMAR RESERVA
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </form>
 </div>
+
+<style>
+    /* Avatares */
+    .avatar-circle { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 3px solid #eee; transition: all 0.2s; }
+    .barber-option { opacity: 0.6; transition: 0.2s; transform: scale(0.95); }
+    .barber-option:hover { opacity: 0.9; transform: scale(1); }
+    .barber-option.selected { opacity: 1; transform: scale(1.05); }
+    .barber-option.selected .avatar-circle { border-color: #c59d5f; box-shadow: 0 0 15px rgba(197, 157, 95, 0.3); }
+    
+    /* Botones de Hora */
+    .time-btn { font-size: 0.9rem; border-radius: 8px; transition: 0.2s; }
+    .time-btn:hover { background-color: #eee; }
+    .time-btn.selected { background-color: #1a1a1a; color: white; border-color: #1a1a1a; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+    
+    /* Hora Ocupada (Rojo) */
+    .time-btn.ocupado { background-color: #ffeaea; color: #dc3545; border-color: #ffcccc; text-decoration: line-through; cursor: not-allowed; opacity: 0.7; }
+    /* Hora Pasada (Gris) */
+    .time-btn.pasada { background-color: #f8f9fa; color: #adb5bd; border-color: #e9ecef; cursor: not-allowed; }
+
+    /* Efectos de Bloqueo Visual */
+    .seccion-desactivada {
+        opacity: 0.2;
+        pointer-events: none; /* Impide clics */
+        filter: grayscale(100%);
+        transition: all 0.3s ease;
+    }
+    .mensaje-flotante {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: #1a1a1a;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 30px;
+        font-size: 0.9rem;
+        font-weight: bold;
+        z-index: 10;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    /* Puntos en el calendario */
+    .flatpickr-day.dia-con-hueco::after { content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 5px; height: 5px; border-radius: 50%; background-color: #198754; }
+    .flatpickr-day.dia-lleno::after { content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 5px; height: 5px; border-radius: 50%; background-color: #dc3545; }
+    .flatpickr-day.selected { background: #c59d5f !important; border-color: #c59d5f !important; }
+</style>
+
+<script>
+    // 1. Datos que vienen desde Django (Views.py)
+    const agenda = {{ agenda_json|safe }}; // { 'id_barbero': { '2023-10-10': ['10:00', '10:30'] } }
+    const precios = {{ precios_json|safe }};
+    const totalHuecosDia = {{ horarios|length }};
+
+    // Variables globales
+    let barberoId = null;
+    let fechaSeleccionada = null;
+    let calendario;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicializar Flatpickr
+        calendario = flatpickr("#calendar-inline", {
+            inline: true,
+            locale: "es",
+            minDate: "today",
+            dateFormat: "Y-m-d",
+            disable: [ function(date) { return (date.getDay() === 0); } ], // Domingos cerrados
+            
+            onChange: function(selectedDates, dateStr) {
+                fechaSeleccionada = dateStr;
+                document.querySelector('[name="fecha"]').value = dateStr;
+                
+                // Formatear fecha para el resumen
+                const fechaBonita = selectedDates[0].toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+                document.getElementById('resumen_fecha').innerText = fechaBonita;
+                document.getElementById('resumen_fecha').style.textTransform = 'capitalize';
+
+                // DESBLOQUEAR VISUALMENTE LAS HORAS
+                desbloquearHoras();
+
+                // Recalcular disponibilidad
+                actualizarHorasDisponibles();
+            },
+            
+            // Pintar los puntos de colores
+            onDayCreate: function(dObj, dStr, fp, dayElem) {
+                pintarEstadoDia(dayElem);
+            }
+        });
+
+        actualizarResumen(); // Carga inicial
+    });
+
+    // --- FUNCIÓN VISUAL: Quitar el borroso y el mensaje ---
+    function desbloquearHoras() {
+        const contenedor = document.getElementById('contenedor-horas');
+        const aviso = document.getElementById('aviso-falta-dia');
+        
+        contenedor.classList.remove('seccion-desactivada');
+        aviso.style.display = 'none';
+    }
+
+    // --- SELECCIÓN DE BARBERO ---
+    function selectBarber(id, nombre, elemento) {
+        barberoId = id;
+        
+        // Estilos
+        document.querySelectorAll('.barber-option').forEach(el => el.classList.remove('selected'));
+        elemento.classList.add('selected');
+        
+        // Datos
+        document.querySelector('[name="barbero"]').value = id;
+        document.getElementById('resumen_barbero').innerText = nombre;
+
+        // Desbloquear calendario
+        document.getElementById('bloque-calendario').classList.remove('opacity-50');
+        document.getElementById('bloque-calendario').style.pointerEvents = 'auto';
+        document.getElementById('aviso-seleccion').classList.add('d-none');
+
+        // Redibujar calendario (para mostrar puntos verdes/rojos de este barbero)
+        calendario.redraw();
+        
+        // Si ya había fecha, refrescar horas
+        if(fechaSeleccionada) actualizarHorasDisponibles();
+    }
+
+    // --- COLORES EN EL CALENDARIO ---
+    function pintarEstadoDia(dayElem) {
+        if (!barberoId) return;
+
+        const fechaCelda = dayElem.dateObj.toISOString().split('T')[0];
+        let citasOcupadas = 0;
+        
+        if (agenda[barberoId] && agenda[barberoId][fechaCelda]) {
+            citasOcupadas = agenda[barberoId][fechaCelda].length;
+        }
+
+        if (citasOcupadas >= totalHuecosDia) {
+            dayElem.classList.add('dia-lleno'); // Rojo
+        } else {
+            if (!dayElem.classList.contains('flatpickr-disabled')) {
+                dayElem.classList.add('dia-con-hueco'); // Verde
+            }
+        }
+    }
+
+    // --- CÁLCULO DE HORAS DISPONIBLES ---
+    function actualizarHorasDisponibles() {
+        if (!barberoId || !fechaSeleccionada) return;
+
+        const botones = document.querySelectorAll('.time-btn');
+        let contadorBloqueadas = 0;
+
+        const fechaHoyStr = ahoyEnString(); 
+        const horaActual = ahoyEnMinutos(); 
+
+        let ocupadasAgenda = [];
+        if (agenda[barberoId] && agenda[barberoId][fechaSeleccionada]) {
+            ocupadasAgenda = agenda[barberoId][fechaSeleccionada];
+        }
+
+        // Hora que el usuario tenía marcada antes de cambiar el día
+        const horaPreviamenteSeleccionada = document.querySelector('[name="hora"]').value;
+
+        botones.forEach(btn => {
+            const horaTexto = btn.getAttribute('data-time'); 
+            
+            // 1. Resetear botón
+            btn.classList.remove('ocupado', 'pasada', 'btn-outline-dark');
+            btn.classList.add('btn-outline-dark');
+            btn.disabled = false; // Se activa porque ya tenemos día seleccionado
+
+            let bloqueado = false;
+
+            // 2. Comprobar AGENDA (Rojo)
+            if (ocupadasAgenda.includes(horaTexto)) {
+                btn.classList.add('ocupado');
+                btn.classList.remove('btn-outline-dark');
+                bloqueado = true;
+            }
+
+            // 3. Comprobar PASADO (Gris) - Solo si es HOY
+            if (!bloqueado && fechaSeleccionada === fechaHoyStr) {
+                const minutosBoton = horaTextoAMinutos(horaTexto);
+                if (minutosBoton < horaActual) {
+                    btn.classList.add('pasada');
+                    btn.classList.remove('btn-outline-dark');
+                    bloqueado = true;
+                }
+            }
+
+            // 4. Aplicar Bloqueo
+            if (bloqueado) {
+                btn.disabled = true;
+                contadorBloqueadas++;
+                
+                // Si la hora que tenía marcada ahora está bloqueada, DESMARCARLA
+                if (horaTexto === horaPreviamenteSeleccionada) {
+                    btn.classList.remove('selected');
+                    document.querySelector('[name="hora"]').value = '';
+                    document.getElementById('resumen_hora').innerText = '--:--';
+                    document.getElementById('btn-submit').disabled = true;
+                }
+            } else {
+                // Mantener selección visual si sigue válida
+                if (horaTexto === horaPreviamenteSeleccionada) {
+                    btn.classList.add('selected');
+                } else {
+                    btn.classList.remove('selected');
+                }
+            }
+        });
+
+        // Mostrar aviso si el día está completo
+        const aviso = document.getElementById('msg-sin-horas');
+        if (contadorBloqueadas === botones.length) {
+            aviso.classList.remove('d-none');
+        } else {
+            aviso.classList.add('d-none');
+        }
+    }
+
+    // --- CLIC EN UNA HORA ---
+    function selectTime(hora, elemento) {
+        // Guardar dato
+        document.querySelector('[name="hora"]').value = hora;
+        
+        // Visual
+        document.querySelectorAll('.time-btn').forEach(btn => {
+            if(!btn.disabled) btn.classList.remove('selected');
+        });
+        elemento.classList.add('selected');
+        
+        // Resumen
+        document.getElementById('resumen_hora').innerText = hora;
+        document.getElementById('btn-submit').disabled = false;
+    }
+
+    // --- ACTUALIZAR DATOS DE SERVICIO ---
+    function actualizarResumen() {
+        const select = document.getElementById('visual_servicio');
+        const selectedOption = select.options[select.selectedIndex];
+        
+        document.querySelector('[name="servicio"]').value = select.value;
+        document.getElementById('resumen_servicio').innerText = selectedOption.getAttribute('data-nombre');
+        
+        const precio = parseFloat(selectedOption.getAttribute('data-precio')).toFixed(2);
+        document.getElementById('resumen_precio').innerText = precio + ' €';
+        document.getElementById('resumen_total').innerText = precio + ' €';
+    }
+
+    // --- HELPERS ---
+    function ahoyEnString() {
+        const d = new Date();
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function ahoyEnMinutos() {
+        const d = new Date();
+        return (d.getHours() * 60) + d.getMinutes();
+    }
+
+    function horaTextoAMinutos(texto) {
+        const partes = texto.split(':');
+        return (parseInt(partes[0]) * 60) + parseInt(partes[1]);
+    }
+</script>
 {% endblock %}

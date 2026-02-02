@@ -1,0 +1,55 @@
+{% extends 'gestion_citas/base.html' %}
+{% block title %}Dashboard Estadísticas{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="fw-bold mb-4">📊 Dashboard de Negocio</h2>
+
+    <div class="row mb-5">
+        <div class="col-md-6">
+            <div class="card bg-dark text-white p-3">
+                <h3>{{ total_citas }}</h3>
+                <p class="text-white-50">Citas Totales</p>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-warning text-dark p-3">
+                <h3>{{ ingresos }} €</h3>
+                <p class="mb-0">Ingresos Estimados</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow p-4">
+        <h4 class="mb-4">Citas por Barbero</h4>
+        <div style="height: 300px;">
+            <canvas id="miGrafica"></canvas>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('miGrafica');
+    
+    new Chart(ctx, {
+        type: 'bar', // Tipo de gráfica: barras
+        data: {
+            labels: {{ nombres_js|safe }}, // Nombres desde Django
+            datasets: [{
+                label: 'Número de Citas',
+                data: {{ cantidades_js|safe }}, // Datos desde Django
+                backgroundColor: '#c59d5f',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } }
+            }
+        }
+    });
+</script>
+{% endblock %}

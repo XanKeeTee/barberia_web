@@ -1,0 +1,43 @@
+{% extends 'gestion_citas/base.html' %}
+
+{% block title %}Valorar Servicio{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow border-0">
+                <div class="card-header bg-dark text-white text-center py-4">
+                    <h3 class="mb-0 text-warning"><i class="bi bi-star-fill"></i> Valorar Barbero</h3>
+                    <p class="mb-0 mt-2">¿Qué tal tu experiencia con <strong>{{ barbero.nombre }}</strong>?</p>
+                </div>
+                
+                <div class="card-body p-4 text-center">
+                    {% if barbero.foto %}
+                        <img src="{{ barbero.foto.url }}" class="rounded-circle mb-3 border border-warning" width="100" height="100" style="object-fit: cover;">
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3 text-start">
+                            <label class="form-label fw-bold">Puntuación</label>
+                            {{ form.puntuacion }}
+                        </div>
+
+                        <div class="mb-4 text-start">
+                            <label class="form-label fw-bold">Comentario</label>
+                            {{ form.comentario }}
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-gold btn-lg">Publicar Reseña</button>
+                            <a href="{% url 'mis_citas' %}" class="btn btn-link text-secondary text-decoration-none">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

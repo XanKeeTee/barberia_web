@@ -4,7 +4,7 @@
 
 {% block content %}
 
-<header class="text-white text-center position-relative" style="background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1503951914875-befbb7135952?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'); background-size: cover; background-position: center; padding: 180px 0;">
+<header class="text-white text-center position-relative" style="background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://i.pinimg.com/1200x/f4/9a/5b/f49a5bbcefa352b47d44f7176ba91cc7.jpg'); background-size: cover; background-position: center; padding: 180px 0;">
     <div class="container position-relative z-index-1">
         <h5 class="text-warning text-uppercase ls-2 fw-bold mb-3">Estilo & Elegancia</h5>
         <h1 class="display-3 fw-bold text-uppercase mb-4">La Excelencia en Cada Corte</h1>
@@ -100,6 +100,10 @@
                     {% endif %}
 
                     <h4 class="fw-bold">{{ barbero.nombre }} {{ barbero.apellido }}</h4>
+                    <div class="text-warning mb-2">
+                        <span class="fw-bold h5">{{ barbero.promedio_estrellas }}</span> <i class="bi bi-star-fill"></i>
+                        <small class="text-muted">({{ barbero.resenas.count }} opiniones)</small>
+                    </div>
                     <p class="text-warning mb-0">{{ barbero.experiencia }} años de experiencia</p>
                     <small class="text-light opacity-75">
                         {% for esp in barbero.especialidades.all %}
