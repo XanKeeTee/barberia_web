@@ -4,9 +4,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .forms import EditarPerfilForm, RegistroUsuarioForm, CitaForm, ResenaForm
+from .forms import EditarPerfilForm, RegistroUsuarioForm, CitaForm, ResenaForm,CitaStaffForm
 from .models import Servicio, Barbero, Cita, Resena
-from datetime import date
+from datetime import date, datetime
 from django.db.models import Count
 import json
 
@@ -111,22 +111,24 @@ def cancelar_cita(request, cita_id):
 
 
 @login_required
+@login_required
 def agenda_profesional(request):
     if not request.user.is_staff:
-        messages.error(
-            request, "No tienes permisos para acceder a la agenda profesional."
-        )
-        return redirect("home")
+        messages.error(request, "No tienes permisos para acceder a la agenda profesional.")
+        return redirect('home')
+
+    Cita.objects.filter(fecha__lt=date.today(), estado='PENDIENTE').update(estado='CANCELADA')
+
+    ahora_mismo = datetime.now().time()
+    Cita.objects.filter(fecha=date.today(), hora__lt=ahora_mismo, estado='PENDIENTE').update(estado='CANCELADA')
 
     hoy = date.today()
-
-    citas = Cita.objects.filter(fecha__gte=hoy).order_by("fecha", "hora")
-
-    return render(
-        request,
-        "gestion_citas/citas/agenda_profesional.html",
-        {"citas": citas, "hoy": hoy},
-    )
+    citas = Cita.objects.filter(fecha__gte=hoy).order_by('fecha', 'hora')
+    
+    return render(request, 'gestion_citas/citas/agenda_profesional.html', {
+        'citas': citas,
+        'hoy': hoy
+    })
 
 
 @login_required
@@ -219,3 +221,26 @@ def dejar_resena(request, barbero_id):
         "gestion_citas/citas/dejar_resena.html",
         {"form": form, "barbero": barbero},
     )
+
+@login_required
+def editar_cita_staff(request, cita_id):
+    # Seguridad: Solo staff puede entrar aquí
+    if not request.user.is_staff:
+        messages.error(request, "No tienes permisos para realizar esta acción.")
+        return redirect('home')
+
+    cita = get_object_or_404(Cita, id=cita_id)
+
+    if request.method == 'POST':
+        form = CitaStaffForm(request.POST, instance=cita)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Cita actualizada correctamente.')
+            return redirect('agenda_profesional') # Vuelve a la agenda
+    else:
+        form = CitaStaffForm(instance=cita)
+
+    return render(request, 'gestion_citas/citas/editar_cita_staff.html', {
+        'form': form,
+        'cita': cita
+    })  

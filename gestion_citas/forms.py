@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import Usuario, Cita,Resena
+from .models import Usuario, Cita, Resena
 from django.forms import DateInput, TimeInput
 
 
@@ -66,4 +66,19 @@ class ResenaForm(forms.ModelForm):
         labels = {
             "puntuacion": "Puntuación (1-5 Estrellas)",
             "comentario": "Tu opinión",
+        }
+
+
+class CitaStaffForm(forms.ModelForm):
+    class Meta:
+        model = Cita
+        fields = ['usuario', 'barbero', 'servicio', 'fecha', 'hora', 'estado', 'notas']
+        widgets = {
+            'fecha': DateInput(format='%Y-%m-%d', attrs={'type': 'date', 'class': 'form-control'}),
+            'hora': TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
+            'notas': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+            'barbero': forms.Select(attrs={'class': 'form-select'}),
+            'servicio': forms.Select(attrs={'class': 'form-select'}),
+            'estado': forms.Select(attrs={'class': 'form-select'}),
+            'usuario': forms.Select(attrs={'class': 'form-select'}),
         }
