@@ -92,18 +92,8 @@
                                 </div>
 
                                 <div class="row g-2" id="time-slots">
-                                    {% for hora in horarios %}
-                                    <div class="col-3 col-md-2">
-                                        <button type="button" 
-                                                class="btn btn-outline-dark w-100 time-btn p-1" 
-                                                data-time="{{ hora }}" 
-                                                disabled
-                                                onclick="selectTime('{{ hora }}', this)">
-                                            {{ hora }}
-                                        </button>
-                                    </div>
-                                    {% endfor %}
                                 </div>
+                                
                                 <div id="msg-sin-horas" class="alert alert-danger mt-3 d-none">
                                     <i class="bi bi-emoji-frown"></i> Día completo o jornada finalizada.
                                 </div>
@@ -195,7 +185,6 @@
         box-shadow: 0 5px 15px rgba(0,0,0,0.2);
     }
 
-    /* Puntos en el calendario */
     .flatpickr-day.dia-con-hueco::after { content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 5px; height: 5px; border-radius: 50%; background-color: #198754; }
     .flatpickr-day.dia-lleno::after { content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 5px; height: 5px; border-radius: 50%; background-color: #dc3545; }
     .flatpickr-day.selected { background: #c59d5f !important; border-color: #c59d5f !important; }
@@ -204,10 +193,21 @@
 <script>
     const agenda = {{ agenda_json|safe }}; 
     const precios = {{ precios_json|safe }};
-    const totalHuecosDia = {{ horarios|length }};
+
+    const horariosSemana = [
+        {% for hora in horarios %}
+            "{{ hora }}"{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    const horariosSabado = [
+        "09:00", "09:30", "10:00", "10:30", "11:00", 
+        "11:30", "12:00", "12:30", "13:00", "13:30", "14:00"
+    ];
 
     let barberoId = null;
     let fechaSeleccionada = null;
+    let esDiaSabado = false; 
     let calendario;
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -220,15 +220,17 @@
             
             onChange: function(selectedDates, dateStr) {
                 fechaSeleccionada = dateStr;
+                esDiaSabado = selectedDates[0].getDay() === 6; 
+                
                 document.querySelector('[name="fecha"]').value = dateStr;
                 
-                // Formatear fecha para el resumen
                 const fechaBonita = selectedDates[0].toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
                 document.getElementById('resumen_fecha').innerText = fechaBonita;
                 document.getElementById('resumen_fecha').style.textTransform = 'capitalize';
 
-                desbloquearHoras();
+                generarBotonesHoras();
 
+                desbloquearHoras();
                 actualizarHorasDisponibles();
             },
             
@@ -240,6 +242,35 @@
         actualizarResumen();
     });
 
+    function generarBotonesHoras() {
+        const contenedor = document.getElementById('time-slots');
+        contenedor.innerHTML = ''; 
+        
+        const horasAUsar = esDiaSabado ? horariosSabado : horariosSemana;
+        
+        const horaPrevia = document.querySelector('[name="hora"]').value;
+        if (horaPrevia && !horasAUsar.includes(horaPrevia)) {
+            document.querySelector('[name="hora"]').value = '';
+            document.getElementById('resumen_hora').innerText = '--:--';
+            document.getElementById('btn-submit').disabled = true;
+        }
+
+        horasAUsar.forEach(hora => {
+            const div = document.createElement('div');
+            div.className = 'col-3 col-md-2';
+            div.innerHTML = `
+                <button type="button" 
+                        class="btn btn-outline-dark w-100 time-btn p-1" 
+                        data-time="${hora}" 
+                        disabled
+                        onclick="selectTime('${hora}', this)">
+                    ${hora}
+                </button>
+            `;
+            contenedor.appendChild(div);
+        });
+    }
+
     function desbloquearHoras() {
         const contenedor = document.getElementById('contenedor-horas');
         const aviso = document.getElementById('aviso-falta-dia');
@@ -247,7 +278,6 @@
         contenedor.classList.remove('seccion-desactivada');
         aviso.style.display = 'none';
     }
-
 
     function selectBarber(id, nombre, elemento) {
         barberoId = id;
@@ -270,14 +300,22 @@
     function pintarEstadoDia(dayElem) {
         if (!barberoId) return;
 
-        const fechaCelda = dayElem.dateObj.toISOString().split('T')[0];
+        const d = dayElem.dateObj;
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const fechaStr = `${year}-${month}-${day}`;
+        
+        const esSabadoEnCalendario = d.getDay() === 6;
+        const totalHuecosDelDia = esSabadoEnCalendario ? horariosSabado.length : horariosSemana.length;
+        
         let citasOcupadas = 0;
         
-        if (agenda[barberoId] && agenda[barberoId][fechaCelda]) {
-            citasOcupadas = agenda[barberoId][fechaCelda].length;
+        if (agenda[barberoId] && agenda[barberoId][fechaStr]) {
+            citasOcupadas = agenda[barberoId][fechaStr].length;
         }
 
-        if (citasOcupadas >= totalHuecosDia) {
+        if (citasOcupadas >= totalHuecosDelDia) {
             dayElem.classList.add('dia-lleno'); 
         } else {
             if (!dayElem.classList.contains('flatpickr-disabled')) {
@@ -346,7 +384,7 @@
         });
 
         const aviso = document.getElementById('msg-sin-horas');
-        if (contadorBloqueadas === botones.length) {
+        if (contadorBloqueadas === botones.length && botones.length > 0) {
             aviso.classList.remove('d-none');
         } else {
             aviso.classList.add('d-none');
