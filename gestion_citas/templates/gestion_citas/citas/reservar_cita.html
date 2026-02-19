@@ -160,27 +160,23 @@
 </div>
 
 <style>
-    /* Avatares */
     .avatar-circle { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 3px solid #eee; transition: all 0.2s; }
     .barber-option { opacity: 0.6; transition: 0.2s; transform: scale(0.95); }
     .barber-option:hover { opacity: 0.9; transform: scale(1); }
     .barber-option.selected { opacity: 1; transform: scale(1.05); }
     .barber-option.selected .avatar-circle { border-color: #c59d5f; box-shadow: 0 0 15px rgba(197, 157, 95, 0.3); }
     
-    /* Botones de Hora */
     .time-btn { font-size: 0.9rem; border-radius: 8px; transition: 0.2s; }
     .time-btn:hover { background-color: #eee; }
     .time-btn.selected { background-color: #1a1a1a; color: white; border-color: #1a1a1a; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
     
-    /* Hora Ocupada (Rojo) */
     .time-btn.ocupado { background-color: #ffeaea; color: #dc3545; border-color: #ffcccc; text-decoration: line-through; cursor: not-allowed; opacity: 0.7; }
-    /* Hora Pasada (Gris) */
+
     .time-btn.pasada { background-color: #f8f9fa; color: #adb5bd; border-color: #e9ecef; cursor: not-allowed; }
 
-    /* Efectos de Bloqueo Visual */
     .seccion-desactivada {
         opacity: 0.2;
-        pointer-events: none; /* Impide clics */
+        pointer-events: none;
         filter: grayscale(100%);
         transition: all 0.3s ease;
     }
@@ -206,24 +202,21 @@
 </style>
 
 <script>
-    // 1. Datos que vienen desde Django (Views.py)
-    const agenda = {{ agenda_json|safe }}; // { 'id_barbero': { '2023-10-10': ['10:00', '10:30'] } }
+    const agenda = {{ agenda_json|safe }}; 
     const precios = {{ precios_json|safe }};
     const totalHuecosDia = {{ horarios|length }};
 
-    // Variables globales
     let barberoId = null;
     let fechaSeleccionada = null;
     let calendario;
 
     document.addEventListener('DOMContentLoaded', function() {
-        // Inicializar Flatpickr
         calendario = flatpickr("#calendar-inline", {
             inline: true,
             locale: "es",
             minDate: "today",
             dateFormat: "Y-m-d",
-            disable: [ function(date) { return (date.getDay() === 0); } ], // Domingos cerrados
+            disable: [ function(date) { return (date.getDay() === 0); } ],
             
             onChange: function(selectedDates, dateStr) {
                 fechaSeleccionada = dateStr;
@@ -234,23 +227,19 @@
                 document.getElementById('resumen_fecha').innerText = fechaBonita;
                 document.getElementById('resumen_fecha').style.textTransform = 'capitalize';
 
-                // DESBLOQUEAR VISUALMENTE LAS HORAS
                 desbloquearHoras();
 
-                // Recalcular disponibilidad
                 actualizarHorasDisponibles();
             },
             
-            // Pintar los puntos de colores
             onDayCreate: function(dObj, dStr, fp, dayElem) {
                 pintarEstadoDia(dayElem);
             }
         });
 
-        actualizarResumen(); // Carga inicial
+        actualizarResumen();
     });
 
-    // --- FUNCIÓN VISUAL: Quitar el borroso y el mensaje ---
     function desbloquearHoras() {
         const contenedor = document.getElementById('contenedor-horas');
         const aviso = document.getElementById('aviso-falta-dia');
@@ -259,31 +248,25 @@
         aviso.style.display = 'none';
     }
 
-    // --- SELECCIÓN DE BARBERO ---
+
     function selectBarber(id, nombre, elemento) {
         barberoId = id;
         
-        // Estilos
         document.querySelectorAll('.barber-option').forEach(el => el.classList.remove('selected'));
         elemento.classList.add('selected');
         
-        // Datos
         document.querySelector('[name="barbero"]').value = id;
         document.getElementById('resumen_barbero').innerText = nombre;
 
-        // Desbloquear calendario
         document.getElementById('bloque-calendario').classList.remove('opacity-50');
         document.getElementById('bloque-calendario').style.pointerEvents = 'auto';
         document.getElementById('aviso-seleccion').classList.add('d-none');
 
-        // Redibujar calendario (para mostrar puntos verdes/rojos de este barbero)
         calendario.redraw();
         
-        // Si ya había fecha, refrescar horas
         if(fechaSeleccionada) actualizarHorasDisponibles();
     }
 
-    // --- COLORES EN EL CALENDARIO ---
     function pintarEstadoDia(dayElem) {
         if (!barberoId) return;
 
@@ -295,15 +278,14 @@
         }
 
         if (citasOcupadas >= totalHuecosDia) {
-            dayElem.classList.add('dia-lleno'); // Rojo
+            dayElem.classList.add('dia-lleno'); 
         } else {
             if (!dayElem.classList.contains('flatpickr-disabled')) {
-                dayElem.classList.add('dia-con-hueco'); // Verde
+                dayElem.classList.add('dia-con-hueco');
             }
         }
     }
 
-    // --- CÁLCULO DE HORAS DISPONIBLES ---
     function actualizarHorasDisponibles() {
         if (!barberoId || !fechaSeleccionada) return;
 
@@ -318,27 +300,23 @@
             ocupadasAgenda = agenda[barberoId][fechaSeleccionada];
         }
 
-        // Hora que el usuario tenía marcada antes de cambiar el día
         const horaPreviamenteSeleccionada = document.querySelector('[name="hora"]').value;
 
         botones.forEach(btn => {
             const horaTexto = btn.getAttribute('data-time'); 
             
-            // 1. Resetear botón
             btn.classList.remove('ocupado', 'pasada', 'btn-outline-dark');
             btn.classList.add('btn-outline-dark');
-            btn.disabled = false; // Se activa porque ya tenemos día seleccionado
+            btn.disabled = false;
 
             let bloqueado = false;
 
-            // 2. Comprobar AGENDA (Rojo)
             if (ocupadasAgenda.includes(horaTexto)) {
                 btn.classList.add('ocupado');
                 btn.classList.remove('btn-outline-dark');
                 bloqueado = true;
             }
 
-            // 3. Comprobar PASADO (Gris) - Solo si es HOY
             if (!bloqueado && fechaSeleccionada === fechaHoyStr) {
                 const minutosBoton = horaTextoAMinutos(horaTexto);
                 if (minutosBoton < horaActual) {
@@ -348,12 +326,10 @@
                 }
             }
 
-            // 4. Aplicar Bloqueo
             if (bloqueado) {
                 btn.disabled = true;
                 contadorBloqueadas++;
                 
-                // Si la hora que tenía marcada ahora está bloqueada, DESMARCARLA
                 if (horaTexto === horaPreviamenteSeleccionada) {
                     btn.classList.remove('selected');
                     document.querySelector('[name="hora"]').value = '';
@@ -361,7 +337,6 @@
                     document.getElementById('btn-submit').disabled = true;
                 }
             } else {
-                // Mantener selección visual si sigue válida
                 if (horaTexto === horaPreviamenteSeleccionada) {
                     btn.classList.add('selected');
                 } else {
@@ -370,7 +345,6 @@
             }
         });
 
-        // Mostrar aviso si el día está completo
         const aviso = document.getElementById('msg-sin-horas');
         if (contadorBloqueadas === botones.length) {
             aviso.classList.remove('d-none');
@@ -379,23 +353,18 @@
         }
     }
 
-    // --- CLIC EN UNA HORA ---
     function selectTime(hora, elemento) {
-        // Guardar dato
         document.querySelector('[name="hora"]').value = hora;
         
-        // Visual
         document.querySelectorAll('.time-btn').forEach(btn => {
             if(!btn.disabled) btn.classList.remove('selected');
         });
         elemento.classList.add('selected');
         
-        // Resumen
         document.getElementById('resumen_hora').innerText = hora;
         document.getElementById('btn-submit').disabled = false;
     }
 
-    // --- ACTUALIZAR DATOS DE SERVICIO ---
     function actualizarResumen() {
         const select = document.getElementById('visual_servicio');
         const selectedOption = select.options[select.selectedIndex];
@@ -408,7 +377,6 @@
         document.getElementById('resumen_total').innerText = precio + ' €';
     }
 
-    // --- HELPERS ---
     function ahoyEnString() {
         const d = new Date();
         const year = d.getFullYear();

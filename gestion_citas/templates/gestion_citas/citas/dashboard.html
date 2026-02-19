@@ -33,12 +33,12 @@
     const ctx = document.getElementById('miGrafica');
     
     new Chart(ctx, {
-        type: 'bar', // Tipo de gráfica: barras
+        type: 'bar',
         data: {
-            labels: {{ nombres_js|safe }}, // Nombres desde Django
+            labels: {{ nombres_js|safe }},
             datasets: [{
                 label: 'Número de Citas',
-                data: {{ cantidades_js|safe }}, // Datos desde Django
+                data: {{ cantidades_js|safe }},
                 backgroundColor: '#c59d5f',
                 borderWidth: 1
             }]
