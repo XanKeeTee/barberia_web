@@ -38,8 +38,8 @@ Sigue estos pasos para ejecutar el proyecto en tu entorno local.
 
 ### 1\. Clonar el repositorio
 
-    git clone https://github.com/tu-usuario/barber-gestion.git
-    cd barber-gestion
+    git clone https://github.com/tu-usuario/barberia_web.git
+    cd barberia_web
 
 ### 2\. Crear y activar el entorno virtual
 
