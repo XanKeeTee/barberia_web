@@ -1,11 +1,9 @@
- BarberGestion - README body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; line-height: 1.6; color: #24292f; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #ffffff; } h1, h2, h3 { margin-top: 24px; margin-bottom: 16px; font-weight: 600; line-height: 1.25; } h1 { font-size: 2em; padding-bottom: 0.3em; border-bottom: 1px solid #d0d7de; } h2 { font-size: 1.5em; padding-bottom: 0.3em; border-bottom: 1px solid #d0d7de; } h3 { font-size: 1.25em; } p, ul, pre { margin-top: 0; margin-bottom: 16px; } ul { padding-left: 2em; } li { margin-top: 0.25em; } pre { background-color: #f6f8fa; border-radius: 6px; padding: 16px; overflow: auto; font-size: 85%; line-height: 1.45; } code { font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace; background-color: rgba(175, 184, 193, 0.2); padding: 0.2em 0.4em; border-radius: 6px; font-size: 85%; } pre code { background-color: transparent; padding: 0; font-size: 100%; } .badges { margin-bottom: 16px; } .badges img { margin-right: 5px; margin-bottom: 5px; } .task-list-item { list-style-type: none; } .task-list-item input { margin: 0 0.2em 0.25em -1.6em; vertical-align: middle; } hr { height: 0.25em; padding: 0; margin: 24px 0; background-color: #d0d7de; border: 0; }
-
 💈 BarberGestion - Sistema de Reservas para Barberías
 =====================================================
 
 ![Django](https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white) ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white) ![Bootstrap](https://img.shields.io/badge/Bootstrap_5-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white) ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 
-BarberGestion es una aplicación web integral desarrollada para la digitalización y automatización de citas en barberías y peluquerías. Diseñada para mejorar la experiencia del cliente y optimizar el tiempo de los profesionales, eliminando la gestión telefónica tradicional.
+BarberiaWeb es una aplicación web integral desarrollada para la digitalización y automatización de citas en barberías y peluquerías. Diseñada para mejorar la experiencia del cliente y optimizar el tiempo de los profesionales, eliminando la gestión telefónica tradicional.
 
 🚀 Características Principales
 ------------------------------
@@ -104,5 +102,3 @@ El panel de administración en: `http://127.0.0.1:8000/admin/`
 Este proyecto es parte de un entorno educativo para el ciclo de Desarrollo de Aplicaciones Web (DAW).
 
 * * *
-
-_Desarrollado con ❤️ para el proyecto final de DAW._
